@@ -5,6 +5,8 @@ This project is a **controlled experiment**, not an AI-first analytics replaceme
 
 Its purpose is to **evaluate where AI genuinely adds value in analytics workflows — and where it does not** — by combining traditional dashboards with AI-assisted exploration in a single product.
 
+About Dataset: AI impact in digital media is an ideal domain for evaluating AI in analytics because it requires interpretation, explanation, and contextual judgment — areas where AI can add value without replacing deterministic computation.
+
 **Two modes, one product.**
 
 ---
