@@ -1,11 +1,25 @@
-# ============================================================
-# AI MEDIA ANALYTICS ORCHESTRATOR
-# Purpose: Prevent secrets/data artifacts from being committed
-# ============================================================
-
-.streamlit/secrets.toml
+# ============================
+# Secrets (NEVER commit)
+# ============================
 .streamlit/
-*.csv
+secrets.toml
+.env
+.env.*
+
+# ============================
+# Data & generated artifacts
+# ============================
+data/
+outputs/
 *.zip
+*.csv
+
+# ============================
+# Python / OS noise
+# ============================
 __pycache__/
+*.pyc
+.ipynb_checkpoints/
 .DS_Store
+.venv/
+venv/
