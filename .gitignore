@@ -1,0 +1,11 @@
+# ============================================================
+# AI MEDIA ANALYTICS ORCHESTRATOR
+# Purpose: Prevent secrets/data artifacts from being committed
+# ============================================================
+
+.streamlit/secrets.toml
+.streamlit/
+*.csv
+*.zip
+__pycache__/
+.DS_Store
