@@ -1,9 +1,8 @@
 # ============================================================
 # AI MEDIA ANALYTICS ORCHESTRATOR
 # Purpose: Evaluate where AI adds value in analytics workflows
-# Mode: Option B (Kaggle auto-download at runtime)
-# Secrets: Option 2 (Streamlit Secrets for Kaggle credentials)
-# Repository: <your-github-username>/ai-media-analytics-orchestrator
+# Mode: Kaggle auto-download at runtime
+# Repository: ai-media-analytics-orchestrator
 # ============================================================
 
 import os
