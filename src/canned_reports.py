@@ -1,6 +1,6 @@
 canned_code = r'''
 import pandas as pd
-from .engine import profile_data, get_numeric_columns, safe_groupby_summary
+from src.engine import profile_data, get_numeric_columns, safe_groupby_summary
 
 def report_data_overview(df: pd.DataFrame) -> dict:
     """
