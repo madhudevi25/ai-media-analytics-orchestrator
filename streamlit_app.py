@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 
 # Import your deterministic analytics modules (from Step 4)
-from src.analytics.engine import load_data
-from src.analytics.canned_reports import report_data_overview, report_top_groupby_summaries
+from src.engine import load_data
+from src.canned_reports import report_data_overview, report_top_groupby_summaries
 
 
 # ----------------------------
