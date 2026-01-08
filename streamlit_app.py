@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # Import your deterministic analytics modules (from Step 4)
-from src.engine import load_data
+from src.engine import load_data,  get_numeric_columns, safe_groupby_summary
 from src.canned_reports import report_data_overview, report_top_groupby_summaries
 from src.orchestrator import route_prompt
 from src.llm_client import chat
@@ -116,6 +116,15 @@ with col2:
 # ----------------------------
 # Prompt-based Ad-hoc (LLM will be wired in Step 6)
 # ----------------------------
+st.subheader("3) Ad-hoc prompt")
+
+# Define user_prompt BEFORE you reference it
+user_prompt = st.text_area(
+    "Ask a question about this dataset (example: 'Summarize numeric metrics by a category')",
+    height=90,
+    key="user_prompt"
+)
+
 if st.button("Run ad-hoc prompt"):
     if not user_prompt.strip():
         st.warning("Type a prompt first.")
