@@ -7,7 +7,6 @@
 
 #----------------------------------------------------------------------------------------
 
-engine_code = r'''
 import pandas as pd
 
 def load_data(csv_path: str) -> pd.DataFrame:
@@ -35,7 +34,7 @@ def profile_data(df: pd.DataFrame) -> dict:
       - calculates a lightweight profile used for transparency and RUAI validation
 
     Output:
-      - dict with row/col counts, column names, missing counts, duplicate rows
+      - dict with row/col counts, column names, missing counts, duplicate rows, dtypes
     """
     missing_by_col = df.isna().sum().sort_values(ascending=False).to_dict()
     dup_rows = int(df.duplicated().sum())
@@ -66,8 +65,8 @@ def safe_groupby_summary(df: pd.DataFrame, group_col: str) -> pd.DataFrame:
 
     Process:
       - groups by group_col
-      - summarizes numeric columns using mean, median, min, max, count
-      - avoids making up any metric definitions; uses raw numeric columns only
+      - summarizes numeric columns using count, mean, median, min, max
+      - avoids inventing metrics; uses raw numeric columns only
 
     Output:
       - summary table DataFrame
@@ -80,7 +79,6 @@ def safe_groupby_summary(df: pd.DataFrame, group_col: str) -> pd.DataFrame:
         raise ValueError("No numeric columns found to summarize.")
 
     grouped = df.groupby(group_col)[num_cols].agg(["count", "mean", "median", "min", "max"])
-    # Flatten multi-index columns for easier UI display
     grouped.columns = [f"{c0}__{c1}" for (c0, c1) in grouped.columns]
     grouped = grouped.reset_index()
 
