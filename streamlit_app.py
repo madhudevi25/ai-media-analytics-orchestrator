@@ -4,7 +4,9 @@ import pandas as pd
 # Import your deterministic analytics modules (from Step 4)
 from src.engine import load_data
 from src.canned_reports import report_data_overview, report_top_groupby_summaries
-
+from src.orchestrator import route_prompt
+from src.llm_client import chat
+from src.ruai_validator import ruai_check
 
 # ----------------------------
 # App config
