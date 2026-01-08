@@ -85,8 +85,4 @@ def safe_groupby_summary(df: pd.DataFrame, group_col: str) -> pd.DataFrame:
     grouped = grouped.reset_index()
 
     return grouped
-'''
-with open("/content/project/app/analytics/engine.py", "w") as f:
-    f.write(engine_code)
 
-print("Wrote: /content/project/app/analytics/engine.py")
