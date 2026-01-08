@@ -23,9 +23,18 @@ st.sidebar.header("Transparency")
 
 # You will set these later when you wire the LLM agents.
 # For now we show placeholders so the UI always communicates model intent.
-ORCHESTRATOR_MODEL = st.sidebar.text_input("Orchestrator model", value="gpt-4.1-mini")
-NARRATIVE_MODEL = st.sidebar.text_input("Narrative model", value="gpt-5")
-VALIDATOR_MODEL = st.sidebar.text_input("RUAI validator model", value="gpt-4.1-nano")
+ORCHESTRATOR_MODEL = st.sidebar.text_input(
+    "Orchestrator model",
+    value=st.secrets.get("ORCHESTRATOR_MODEL", "gpt-4.1-mini")
+)
+NARRATIVE_MODEL = st.sidebar.text_input(
+    "Narrative model",
+    value=st.secrets.get("NARRATIVE_MODEL", "gpt-5")
+)
+VALIDATOR_MODEL = st.sidebar.text_input(
+    "RUAI validator model",
+    value=st.secrets.get("VALIDATOR_MODEL", "gpt-4.1-nano")
+)
 
 st.sidebar.write("**Models used (planned):**")
 st.sidebar.write(f"- Orchestrator: `{ORCHESTRATOR_MODEL}`")
@@ -107,31 +116,104 @@ with col2:
 # ----------------------------
 # Prompt-based Ad-hoc (LLM will be wired in Step 6)
 # ----------------------------
-st.subheader("3) Ad-hoc prompt (coming next)")
-
-user_prompt = st.text_area(
-    "Ask a question about this dataset (example: 'Show the biggest year-over-year change and explain why')",
-    height=90
-)
-
 if st.button("Run ad-hoc prompt"):
     if not user_prompt.strip():
         st.warning("Type a prompt first.")
     else:
-        # Step 5: We do NOT call the LLM yet (no secrets configured).
-        # We show what will happen next, and keep the app functional.
-        st.info("LLM is not wired yet. Next step will: route prompt → compute results → explain → RUAI validate.")
-        st.write("Your prompt:")
-        st.code(user_prompt)
+        # 1) Orchestrate: decide which tool to run (constrained to real columns)
+        columns = list(df.columns)
+        numeric_cols = get_numeric_columns(df)
 
-        st.write("Planned pipeline:")
-        st.markdown(
-            "- Orchestrator: classify request (canned vs ad-hoc)\n"
-            "- Analytics Engine: compute tables/charts from CSV\n"
-            "- Narrative: explain insights based on computed results\n"
-            "- RUAI Validator: grounding + fairness + limitations\n"
-            "- UI: show results + ask if it matches expectations"
+        tool_choice = route_prompt(
+            user_prompt=user_prompt,
+            columns=columns,
+            numeric_columns=numeric_cols,
+            model=ORCHESTRATOR_MODEL
         )
+
+        st.write("### Orchestrator decision (transparent)")
+        st.json(tool_choice)
+
+        # 2) Deterministic analytics (Pandas) - no hallucinated metrics
+        tool = tool_choice.get("tool")
+        args = tool_choice.get("args", {})
+
+        computed_summary = ""
+        result_table = None
+
+        if tool == "dataset_overview":
+            overview = report_data_overview(df)
+            st.write("### Result: Dataset overview")
+            st.json(overview)
+
+            computed_summary = (
+                f"Rows={overview['profile']['rows']}, Cols={overview['profile']['columns']}, "
+                f"DuplicateRows={overview['profile']['duplicate_rows']}. "
+                f"TopMissing={overview['top_missing_columns'][:3]}."
+            )
+
+        elif tool == "groupby_summary":
+            group_col = args.get("group_col")
+            if not group_col:
+                st.warning("Orchestrator did not provide group_col; defaulting to dataset_overview.")
+                overview = report_data_overview(df)
+                st.json(overview)
+                computed_summary = "Fallback to dataset overview due to missing group_col."
+            else:
+                result_table = safe_groupby_summary(df, group_col)
+                st.write(f"### Result: Group-by summary for `{group_col}`")
+                st.dataframe(result_table, use_container_width=True)
+
+                computed_summary = (
+                    f"Computed group-by summary for {group_col}. "
+                    f"Returned {result_table.shape[0]} groups and {result_table.shape[1]} columns."
+                )
+        else:
+            st.warning("Unsupported tool selected; defaulting to dataset_overview.")
+            overview = report_data_overview(df)
+            st.json(overview)
+            computed_summary = "Fallback to dataset overview due to unsupported tool."
+
+        # 3) Narrative: explain based on computed results only
+        narrative_system = (
+            "You are a data analyst. Explain insights only from the provided computed summary. "
+            "Do NOT invent numbers. If the user asked for something not supported, explain limits."
+        )
+        narrative_user = f"""
+User prompt:
+{user_prompt}
+
+Computed results summary:
+{computed_summary}
+
+Write:
+1) What insight this provides
+2) Why it matters
+3) What limitations apply
+4) Ask: 'Does this match what you expected?'
+"""
+        explanation = chat(model=NARRATIVE_MODEL, system=narrative_system, user=narrative_user)
+
+        st.write("### Explanation")
+        st.write(explanation)
+
+        # 4) RUAI validation
+        ruai = ruai_check(
+            user_prompt=user_prompt,
+            tool_choice=tool_choice,
+            computed_summary=computed_summary,
+            model=VALIDATOR_MODEL
+        )
+
+        st.write("### RUAI validation")
+        st.json(ruai)
+
+        # 5) User expectation confirmation (simple UI control)
+        st.write("### Confirm")
+        match = st.radio("Does this match your expectation?", ["Yes", "No"], horizontal=True)
+        if match == "No":
+            st.text_area("What did you expect instead? (This helps refine the prompt/router.)")
+
 
 
 
